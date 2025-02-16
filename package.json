@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "install-backend": "npm install",
-    "start-backend": "node app.js"
+    "start-backend": "node app.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
