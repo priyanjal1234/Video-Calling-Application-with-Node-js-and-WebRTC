@@ -4,6 +4,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Server } from "socket.io";
 
+import dotenv from 'dotenv'
+dotenv.config()
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -62,7 +65,7 @@ app.get("/", function (req, res) {
   res.render("index");
 });
 
-const port = 3000;
+const port = process.env.PORT || 4000;
 server.listen(port, function () {
   console.log(`Server is running on port ${port}`);
 });
