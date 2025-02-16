@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Calling Application</title>
+    <link rel="stylesheet" href="../css/style.css" />
+  </head>
+  <body>
+    <main class="main-container">
+      <aside class="caller-list-wrapper">
+        <h1 class="caller-list-heading h-font">Contacts</h1>
+        <ul id="allusers" class="caller-list">
+          <!-- <li>
+                    <span>Rizwan Khan (You)</span>
+                    <button class="call-btn"><img width="20" src="/images/phone.png" alt=""></button>
+                </li> -->
+        </ul>
+      </aside>
+      <section class="video-call-container">
+        <div class="username-input">
+          <input
+            id="username"
+            type="text"
+            placeholder="Enter Username"
+          /><button id="create-user">Create</button>
+        </div>
+        <div class="video-streams">
+          <div class="local-video">
+            <video id="localVideo" autoplay muted playsinline></video>
+          </div>
+          <div class="remote-video">
+            <video id="remoteVideo" autoplay muted playsinline></video>
+          </div>
+        </div>
+        <div>
+          <button id="end-call-btn" class="call call-disconnect d-none">
+            <img src="/images/phone-disconnect.png" alt="" />
+          </button>
+        </div>
+      </section>
+    </main>
+    <script
+      src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+      integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const socket = io();
+      const createUserBtn = document.getElementById("create-user");
+      const username = document.getElementById("username");
+      const allUsersHtml = document.getElementById("allusers");
+      const localVideo = document.getElementById("localVideo");
+      const remoteVideo = document.getElementById("remoteVideo");
+      let localStream;
+
+      // Singleton for peer connection
+      const PeerConnection = (function () {
+        let peerConnection;
+
+        function createPeerConnection() {
+          const config = {
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+          };
+          peerConnection = new RTCPeerConnection(config);
+
+          // Add local stream to peer connection
+          localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+          });
+
+          // Listen to remote stream
+          peerConnection.ontrack = function (event) {
+            remoteVideo.srcObject = event.streams[0];
+          };
+
+          // Listen for ICE candidate
+          peerConnection.onicecandidate = function (event) {
+            if (event.candidate) {
+              socket.emit("icecandidate", {
+                to: currentCallUser,
+                candidate: event.candidate,
+              });
+            }
+          };
+
+          return peerConnection;
+        }
+
+        return {
+          getInstance: function () {
+            if (!peerConnection) {
+              peerConnection = createPeerConnection();
+            }
+            return peerConnection;
+          },
+        };
+      })();
+
+      // Handle user join
+      createUserBtn.addEventListener("click", function () {
+        if (username.value !== "") {
+          const usernameContainer = document.querySelector(".username-input");
+          socket.emit("join-user", username.value);
+          usernameContainer.style.display = "none";
+        }
+      });
+
+      // Handle user list
+      socket.on("user-joined", function (allUsers) {
+        allUsersHtml.innerHTML = "";
+
+        for (const user in allUsers) {
+          const li = document.createElement("li");
+          li.textContent = `${user} ${user === username.value ? "(You)" : ""}`;
+
+          if (user !== username.value) {
+            const button = document.createElement("button");
+            button.classList.add("call-btn");
+            button.addEventListener("click", () => {
+              startCall(user);
+            });
+
+            const img = document.createElement("img");
+            img.setAttribute("src", "/images/phone.png");
+            img.setAttribute("width", 20);
+            button.appendChild(img);
+            li.appendChild(button);
+          }
+
+          allUsersHtml.appendChild(li);
+        }
+      });
+
+      // Handle Offer
+      socket.on("offer", async function ({ from, to, offer }) {
+        const pc = PeerConnection.getInstance();
+        await pc?.setRemoteDescription(new RTCSessionDescription(offer));
+
+        const answer = await pc?.createAnswer();
+        await pc?.setLocalDescription(answer);
+
+        socket.emit("answer", {
+          from: to,
+          to: from,
+          answer: pc.localDescription,
+        });
+      });
+
+      // Handle Answer
+      socket.on("answer", async function ({ answer }) {
+        const pc = PeerConnection.getInstance();
+        await pc?.setRemoteDescription(new RTCSessionDescription(answer));
+      });
+
+      // Handle ICE Candidate
+      socket.on("icecandidate", async function (candidate) {
+        const pc = PeerConnection.getInstance();
+        await pc?.addIceCandidate(new RTCIceCandidate(candidate));
+      });
+
+      // Start Call
+      let currentCallUser = null;
+      async function startCall(user) {
+        currentCallUser = user;
+        const pc = PeerConnection.getInstance();
+        const offer = await pc?.createOffer();
+        await pc?.setLocalDescription(offer);
+
+        socket.emit("offer", {
+          from: username.value,
+          to: user,
+          offer: pc.localDescription,
+        });
+      }
+
+      // Initialize Video Stream
+      async function startMyVideo() {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        localVideo.srcObject = localStream;
+      }
+
+      startMyVideo();
+    </script>
+  </body>
+</html>
