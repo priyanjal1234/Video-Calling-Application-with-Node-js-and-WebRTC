@@ -7,37 +7,38 @@
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
-    <main class="main-container">
-      <aside class="caller-list-wrapper">
-        <h1 class="caller-list-heading h-font">Contacts</h1>
-        <ul id="allusers" class="caller-list">
-          <!-- <li>
-                    <span>Rizwan Khan (You)</span>
-                    <button class="call-btn"><img width="20" src="/images/phone.png" alt=""></button>
-                </li> -->
-        </ul>
+    <main class="main-container" style="background-color: #121212; color: #ffffff;">
+      <aside class="caller-list-wrapper" style="background-color: #1e1e1e;">
+      <h1 class="caller-list-heading h-font" style="color: #ffffff;">Contacts</h1>
+      <ul id="allusers" class="caller-list">
+        <!-- <li>
+            <span>Rizwan Khan (You)</span>
+            <button class="call-btn"><img width="20" src="/images/phone.png" alt=""></button>
+          </li> -->
+      </ul>
       </aside>
       <section class="video-call-container">
-        <div class="username-input">
-          <input
-            id="username"
-            type="text"
-            placeholder="Enter Username"
-          /><button id="create-user">Create</button>
+      <div class="username-input">
+        <input
+        id="username"
+        type="text"
+        placeholder="Enter Username"
+        style="background-color: #333333; color: #ffffff; border: 1px solid #444444;"
+        /><button id="create-user" style="background-color: #444444; color: #ffffff; border: 1px solid #555555;">Create</button>
+      </div>
+      <div class="video-streams">
+        <div class="local-video">
+        <video id="localVideo" autoplay muted playsinline style="background-color: #000000;"></video>
         </div>
-        <div class="video-streams">
-          <div class="local-video">
-            <video id="localVideo" autoplay muted playsinline></video>
-          </div>
-          <div class="remote-video">
-            <video id="remoteVideo" autoplay muted playsinline></video>
-          </div>
+        <div class="remote-video">
+        <video id="remoteVideo" autoplay muted playsinline style="background-color: #000000;"></video>
         </div>
-        <div>
-          <button id="end-call-btn" class="call call-disconnect d-none">
-            <img src="/images/phone-disconnect.png" alt="" />
-          </button>
-        </div>
+      </div>
+      <div>
+        <button id="end-call-btn" class="call call-disconnect d-none" style="background-color: #ff4444; color: #ffffff;">
+        <img src="/images/phone-disconnect.png" alt="" />
+        </button>
+      </div>
       </section>
     </main>
     <script
